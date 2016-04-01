@@ -5,3 +5,4 @@ C:\Users\iomak\Documents\GitHub\env-istatistik\env-istatistik\obj\Debug\env_ista
 C:\Users\iomak\Documents\GitHub\env-istatistik\env-istatistik\obj\Debug\env-istatistik.csproj.GenerateResource.Cache
 C:\Users\iomak\Documents\GitHub\env-istatistik\env-istatistik\obj\Debug\env-istatistik.exe
 C:\Users\iomak\Documents\GitHub\env-istatistik\env-istatistik\obj\Debug\env-istatistik.pdb
+C:\Users\iomak\Documents\GitHub\env-istatistik\env-istatistik\obj\Debug\env_istatistik.Form1.resources
