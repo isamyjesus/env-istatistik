@@ -1,7 +1,15 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="env_istatistik.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="wrfDataPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Enverziyon\stat-data\EnvWrfYedek\</Value>
+    </Setting>
+    <Setting Name="ecmDataPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Enverziyon\stat-data\EnvYedek\</Value>
+    </Setting>
+    <Setting Name="radDataPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Enverziyon\stat-data\radiodata\</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>
