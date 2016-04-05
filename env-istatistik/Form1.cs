@@ -101,6 +101,94 @@ namespace env_istatistik
             return alinan.ToArray();
         }
 
+        private void istasyonAyir(string dosyaYolu)
+        {
+            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
+            try
+            {
+                string satir = "";
+                int istasyon = 0;
+                string[] degerler;
+                StreamReader rdrDosya = new StreamReader(dosyaYolu);
+                List<string> yazList_17130 = new List<string>();
+                List<string> yazList_17240 = new List<string>();
+                List<string> yazList_17351 = new List<string>();
+                List<string> yazList_17220 = new List<string>();
+                List<string> yazList_17064 = new List<string>();
+                List<string> yazList_17030 = new List<string>();
+                List<string> yazList_17095 = new List<string>();
+                List<string> yazList_17281 = new List<string>();
+                while ((satir = rdrDosya.ReadLine()) != null)
+                {
+                    degerler = satir.Split(';');
+                    istasyon = Int32.Parse(degerler[0]);
+                    switch (istasyon)
+                    {
+                        case 17130:
+                            yazList_17130.Add(satir);
+                            break;
+                        case 17240:
+                            yazList_17240.Add(satir);
+                            break;
+                        case 17351:
+                            yazList_17351.Add(satir);
+                            break;
+                        case 17220:
+                            yazList_17220.Add(satir);
+                            break;
+                        case 17064:
+                            yazList_17064.Add(satir);
+                            break;
+                        case 17030:
+                            yazList_17030.Add(satir);
+                            break;
+                        case 17095:
+                            yazList_17095.Add(satir);
+                            break;
+                        case 17281:
+                            yazList_17281.Add(satir);
+                            break;
+                        default: break;
+                    }
+                }
+                rdrDosya.Close();
+                File.WriteAllLines("d_17130.txt", yazList_17130.ToArray());
+                File.WriteAllLines("d_17240.txt", yazList_17240.ToArray());
+                File.WriteAllLines("d_17351.txt", yazList_17351.ToArray());
+                File.WriteAllLines("d_17220.txt", yazList_17220.ToArray());
+                File.WriteAllLines("d_17064.txt", yazList_17064.ToArray());
+                File.WriteAllLines("d_17030.txt", yazList_17030.ToArray());
+                File.WriteAllLines("d_17095.txt", yazList_17095.ToArray());
+                File.WriteAllLines("d_17281.txt", yazList_17281.ToArray());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private void seviyeLimit(string dosyaYolu)
+        {
+            string[] satirlar = File.ReadAllLines(dosyaYolu);
+            string[] tekSatir;
+            int seviye = 0;
+            int ilkSeviye = Int32.Parse(satirlar[0].Split(';')[0]);
+            List<string> yazList = new List<string>();
+            string tmpSatir = "";
+            for (int i = 1; i < satirlar.Length; i++)
+            {
+                tmpSatir = satirlar[i];
+                tekSatir = tmpSatir.Split(';');
+                seviye = Int32.Parse(tekSatir[0]);
+                if (seviye <= ilkSeviye + 1500)
+                {
+                    tmpSatir = tmpSatir.Replace('.', ',');
+                    yazList.Add(tmpSatir);
+                }
+            }
+            File.WriteAllLines(dosyaYolu, yazList.ToArray());
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             
