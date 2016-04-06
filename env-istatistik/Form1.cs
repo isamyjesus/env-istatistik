@@ -103,7 +103,6 @@ namespace env_istatistik
 
         private void istasyonAyir(string dosyaYolu)
         {
-            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
             try
             {
                 string satir = "";
@@ -152,14 +151,15 @@ namespace env_istatistik
                     }
                 }
                 rdrDosya.Close();
-                File.WriteAllLines("d_17130.txt", yazList_17130.ToArray());
-                File.WriteAllLines("d_17240.txt", yazList_17240.ToArray());
-                File.WriteAllLines("d_17351.txt", yazList_17351.ToArray());
-                File.WriteAllLines("d_17220.txt", yazList_17220.ToArray());
-                File.WriteAllLines("d_17064.txt", yazList_17064.ToArray());
-                File.WriteAllLines("d_17030.txt", yazList_17030.ToArray());
-                File.WriteAllLines("d_17095.txt", yazList_17095.ToArray());
-                File.WriteAllLines("d_17281.txt", yazList_17281.ToArray());
+                string tempYol = Properties.Settings.Default.tmpPath;
+                File.WriteAllLines(tempYol + "d_17130.txt", yazList_17130.ToArray());
+                File.WriteAllLines(tempYol + "d_17240.txt", yazList_17240.ToArray());
+                File.WriteAllLines(tempYol + "d_17351.txt", yazList_17351.ToArray());
+                File.WriteAllLines(tempYol + "d_17220.txt", yazList_17220.ToArray());
+                File.WriteAllLines(tempYol + "d_17064.txt", yazList_17064.ToArray());
+                File.WriteAllLines(tempYol + "d_17030.txt", yazList_17030.ToArray());
+                File.WriteAllLines(tempYol + "d_17095.txt", yazList_17095.ToArray());
+                File.WriteAllLines(tempYol + "d_17281.txt", yazList_17281.ToArray());
             }
             catch (Exception ex)
             {
@@ -172,14 +172,14 @@ namespace env_istatistik
             string[] satirlar = File.ReadAllLines(dosyaYolu);
             string[] tekSatir;
             int seviye = 0;
-            int ilkSeviye = Int32.Parse(satirlar[0].Split(';')[0]);
+            int ilkSeviye = Int32.Parse(satirlar[0].Split(';')[5]);
             List<string> yazList = new List<string>();
             string tmpSatir = "";
             for (int i = 1; i < satirlar.Length; i++)
             {
                 tmpSatir = satirlar[i];
                 tekSatir = tmpSatir.Split(';');
-                seviye = Int32.Parse(tekSatir[0]);
+                seviye = Int32.Parse(tekSatir[5]);
                 if (seviye <= ilkSeviye + 1500)
                 {
                     tmpSatir = tmpSatir.Replace('.', ',');
@@ -189,6 +189,77 @@ namespace env_istatistik
             File.WriteAllLines(dosyaYolu, yazList.ToArray());
         }
 
+        private void sicaklikFarkiHesapla(string dosyaYolu, string gTarih, string saat)
+        {
+            string yazDosya = Properties.Settings.Default.radSicaklikPath + gTarih + "_rsf.txt";
+            if(!(File.Exists(yazDosya)))
+            {
+                FileStream fs = File.Create(yazDosya);
+                fs.Close();
+            }
+            string[] tumSatirlar = File.ReadAllLines(dosyaYolu);
+            if (tumSatirlar.Length > 0)
+            {
+                string istNo = dosyaYolu.Substring(dosyaYolu.Length - 9, 5);
+                float ilkS = 0;
+                float n;
+                if (float.TryParse(tumSatirlar[0].Split(';')[6], out n))
+                    ilkS = float.Parse(tumSatirlar[0].Split(';')[6]);
+                float tmpS = 0, sBas = 0, sBit = 0, sf = 0;
+                bool envBulundu = false;
+                for (int i = 1; i < tumSatirlar.Length; i++)
+                {
+                    if (float.TryParse(tumSatirlar[i].Split(';')[6], out n))
+                        tmpS = float.Parse(tumSatirlar[i].Split(';')[6]);
+                    else
+                        tmpS = 0;
+                    if (envBulundu)
+                    {
+                        if (tmpS < ilkS)
+                        {
+                            sBit = ilkS;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (tmpS > ilkS)
+                        {
+                            envBulundu = true;
+                            sBas = ilkS;
+                        }
+                    }
+                    ilkS = tmpS;
+                }
+                sf = sBit - sBas;
+                if (saat == "00")
+                {
+                    File.AppendAllText(yazDosya, istNo + ";00;" + sf.ToString("F1") + "\n");
+                }
+                else
+                {
+                    string[] satirTemp = File.ReadAllLines(yazDosya);
+                    bool istVar = false;
+                    for (int i = 0; i < satirTemp.Length; i++)
+                    {
+                        if (satirTemp[i].Contains(istNo))
+                        {
+                            satirTemp[i] += ";12;" + sf.ToString("F1");
+                            istVar = true;
+                        }
+                        if (istVar)
+                        {
+                            File.WriteAllLines(yazDosya, satirTemp);
+                        }
+                        else
+                        {
+                            File.AppendAllText(yazDosya, istNo + "00;0;12;" + sf.ToString("F1") + "\n");
+                        }
+                    }
+                }
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             
@@ -196,10 +267,42 @@ namespace env_istatistik
 
         private void button1_Click(object sender, EventArgs e)
         {
-            int a = Int32.Parse(textBox1.Text);
-            string wrfPath = Properties.Settings.Default.wrfDataPath;
+            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
+            string[] dosyalar = Directory.GetFiles(Properties.Settings.Default.radDataPath);
+            string[] tmpDosyalar;
+            string dosyaAd = "", tmpD;
+            FileInfo fi, tmpFi;
+            string dTarih = "";
+            string ss = "00";
+            for (int i = 0; i < dosyalar.Length; i++)
+            {
+                dosyaAd = dosyalar[i];
+                dTarih = dosyaAd.Substring(dosyaAd.Length - 16, 8);
+                fi = new FileInfo(dosyaAd);
+                if (dosyaAd.Contains("radio_") && fi.Length > 0)
+                {
+                    istasyonAyir(dosyaAd);
+                    tmpDosyalar = Directory.GetFiles(Properties.Settings.Default.tmpPath);
+                    for (int j = 0; j < tmpDosyalar.Length; j++)
+                    {
+                        tmpD = tmpDosyalar[j];
+                        tmpFi = new FileInfo(tmpD);
+                        if (tmpD.Contains("d_") && tmpFi.Length > 0)
+                        {
+                            if (dosyaAd.Contains("0549"))
+                                ss = "00";
+                            else
+                                ss = "12";
+                            seviyeLimit(tmpD);
+                            sicaklikFarkiHesapla(tmpD, dTarih, ss);
+                        }
+                    }
+                }
+            }
+            //int a = Int32.Parse(textBox1.Text);
+            //string wrfPath = Properties.Settings.Default.wrfDataPath;
             //MessageBox.Show(a.ToString());
-            float[] wrfVeri = veriAlWrf(wrfPath, 20151011, 20160201, "Izmir", 4);
+            //float[] wrfVeri = veriAlWrf(wrfPath, 20151011, 20160201, "Izmir", 4);
         }
     }
 }

@@ -58,5 +58,29 @@ namespace env_istatistik.Properties {
                 this["radDataPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\Enverziyon\\stat-data\\tmp\\")]
+        public string tmpPath {
+            get {
+                return ((string)(this["tmpPath"]));
+            }
+            set {
+                this["tmpPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\Enverziyon\\stat-data\\radSicaklik\\")]
+        public string radSicaklikPath {
+            get {
+                return ((string)(this["radSicaklikPath"]));
+            }
+            set {
+                this["radSicaklikPath"] = value;
+            }
+        }
     }
 }

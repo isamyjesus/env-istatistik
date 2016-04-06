@@ -11,5 +11,11 @@
     <Setting Name="radDataPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">D:\Enverziyon\stat-data\radiodata\</Value>
     </Setting>
+    <Setting Name="tmpPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Enverziyon\stat-data\tmp\</Value>
+    </Setting>
+    <Setting Name="radSicaklikPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Enverziyon\stat-data\radSicaklik\</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
