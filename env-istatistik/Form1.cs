@@ -17,6 +17,8 @@ namespace env_istatistik
             InitializeComponent();
         }
 
+        string pwrf = Properties.Settings.Default.wrfDataPath, penv = Properties.Settings.Default.ecmDataPath, prad = Properties.Settings.Default.radDataPath, prs = Properties.Settings.Default.radSicaklikPath;
+
         private float ortalama(float[] veri)
         {
             float ort = 0;
@@ -191,7 +193,7 @@ namespace env_istatistik
 
         private void sicaklikFarkiHesapla(string dosyaYolu, string gTarih, string saat)
         {
-            string yazDosya = Properties.Settings.Default.radSicaklikPath + gTarih + "_rsf.txt";
+            string yazDosya = prs + gTarih + "_rsf.txt";
             if(!(File.Exists(yazDosya)))
             {
                 FileStream fs = File.Create(yazDosya);
@@ -260,6 +262,39 @@ namespace env_istatistik
             }
         }
 
+        private float[] veriAlRad(string path, int minDate, int maxDate, string ist, int sira)
+        {
+            List<float> alinan = new List<float>();
+            string[] dosyalar = Directory.GetFiles(path);
+            int dosyaTarih = 0;
+            string strTarih = "";
+            int n;
+            string[] satirlar, tekSatir;
+            char[] ayr = { ';'};
+            for (int i = 0; i < dosyalar.Length; i++)
+            {
+                strTarih = dosyalar[i].Substring(dosyalar[i].Length - 16, 8);
+                if (int.TryParse(strTarih, out n))
+                {
+                    dosyaTarih = Int32.Parse(strTarih);
+                    if (dosyaTarih >= minDate && dosyaTarih <= maxDate)
+                    {
+                        satirlar = File.ReadAllLines(dosyalar[i]);
+                        for (int j = 0; j < satirlar.Length; j++)
+                        {
+                            if (satirlar[j].Contains(ist))
+                            {
+                                tekSatir = satirlar[j].Split(ayr);
+                                alinan.Add(float.Parse(tekSatir[sira]));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return alinan.ToArray();
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             
@@ -267,8 +302,7 @@ namespace env_istatistik
 
         private void button1_Click(object sender, EventArgs e)
         {
-            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
-            string[] dosyalar = Directory.GetFiles(Properties.Settings.Default.radDataPath);
+            string[] dosyalar = Directory.GetFiles(prad);
             string[] tmpDosyalar;
             string dosyaAd = "", tmpD;
             FileInfo fi, tmpFi;
@@ -303,6 +337,19 @@ namespace env_istatistik
             //string wrfPath = Properties.Settings.Default.wrfDataPath;
             //MessageBox.Show(a.ToString());
             //float[] wrfVeri = veriAlWrf(wrfPath, 20151011, 20160201, "Izmir", 4);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
+            string[] istasyonlar2 = { "Ankara", "Isparta", "Adana", "Izmir", "Istanbul", "Samsun", "Erzurum", "Diyarbakir" };
+            int ilkTarih = 20150611, sonTarih = 20160331;
+            for (int i = 0; i < istasyonlar.Length; i++)
+            {
+                float[] veriWrf = veriAlWrf(pwrf, ilkTarih, sonTarih, istasyonlar[i], 4);
+                float[] veriRad = veriAlRad(prs, ilkTarih, sonTarih, istasyonlar2[i], 2);
+            }
+            MessageBox.Show("123");
         }
     }
 }
