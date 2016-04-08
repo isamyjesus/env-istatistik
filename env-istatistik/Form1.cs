@@ -214,7 +214,7 @@ namespace env_istatistik
                     if (float.TryParse(tumSatirlar[i].Split(';')[6], out n))
                         tmpS = float.Parse(tumSatirlar[i].Split(';')[6]);
                     else
-                        tmpS = 0;
+                        continue;
                     if (envBulundu)
                     {
                         if (tmpS < ilkS)
@@ -248,15 +248,16 @@ namespace env_istatistik
                         {
                             satirTemp[i] += ";12;" + sf.ToString("F1");
                             istVar = true;
+                            break;
                         }
-                        if (istVar)
-                        {
-                            File.WriteAllLines(yazDosya, satirTemp);
-                        }
-                        else
-                        {
-                            File.AppendAllText(yazDosya, istNo + "00;0;12;" + sf.ToString("F1") + "\n");
-                        }
+                    }
+                    if (istVar)
+                    {
+                        File.WriteAllLines(yazDosya, satirTemp);
+                    }
+                    else
+                    {
+                        File.AppendAllText(yazDosya, istNo + ";00;-99;12;" + sf.ToString("F1") + "\n");
                     }
                 }
             }
@@ -341,15 +342,62 @@ namespace env_istatistik
 
         private void button2_Click(object sender, EventArgs e)
         {
-            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
+            /*string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
             string[] istasyonlar2 = { "Ankara", "Isparta", "Adana", "Izmir", "Istanbul", "Samsun", "Erzurum", "Diyarbakir" };
             int ilkTarih = 20150611, sonTarih = 20160331;
             for (int i = 0; i < istasyonlar.Length; i++)
             {
                 float[] veriWrf = veriAlWrf(pwrf, ilkTarih, sonTarih, istasyonlar[i], 4);
                 float[] veriRad = veriAlRad(prs, ilkTarih, sonTarih, istasyonlar2[i], 2);
-            }
+            }*/
+            //rTamamla(prs);
+            ristTam(prs);
             MessageBox.Show("123");
+        }
+
+        private void rTamamla(string klasor)
+        {
+            string[] dosyalar = Directory.GetFiles(klasor);
+            string[] satirlar, sutunlar;
+            for (int i = 0; i < dosyalar.Length; i++)
+            {
+                satirlar = File.ReadAllLines(dosyalar[i]);
+                for (int j = 0; j < satirlar.Length; j++)
+                {
+                    sutunlar = satirlar[j].Split(';');
+                    while (sutunlar.Length < 5)
+                    {
+                        satirlar[j] += ";-99";
+                        sutunlar = satirlar[j].Split(';');
+                    }
+                }
+                File.WriteAllLines(dosyalar[i], satirlar);
+            }
+        }
+
+        private void ristTam(string klasor)
+        {
+            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
+            string[] dosyalar = Directory.GetFiles(klasor);
+            string[] satirlar;
+            bool var;
+            for (int i = 0; i < dosyalar.Length; i++)
+            {
+                satirlar = File.ReadAllLines(dosyalar[i]);
+                for (int j = 0; j < istasyonlar.Length; j++)
+                {
+                    var = false;
+                    for (int k = 0; k < satirlar.Length; k++)
+                    {
+                        if (satirlar[k].Contains(istasyonlar[j]))
+                        {
+                            var = true;
+                        }
+                    }
+                    if (!var)
+                        File.AppendAllText(dosyalar[i], istasyonlar[j] + ";0;-99;12;-99\n");
+                }
+            }
         }
     }
 }
