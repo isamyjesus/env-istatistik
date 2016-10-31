@@ -23,20 +23,108 @@ namespace env_istatistik
         {
             float ort = 0;
             int say = veri.Length;
+            int bolum = 0;
             for (int v = 0; v < say;v++)
             {
-                ort += veri[v];
+                if ((int)veri[v] != -99)
+                {
+                    ort += veri[v];
+                    bolum++;
+                }
             }
-            if (say > 0)
-                ort = ort / say;
+            if (bolum > 0)
+                ort = ort / bolum;
+            else
+                ort = -99;
             return ort;
         }
 
-        private float mb(float[] gVeri, float[] mVeri)
+        private float mb(float[] tahminVeri, float[] olcumVeri)
         {
-            float gOrt = ortalama(gVeri);
-            float mOrt = ortalama(mVeri);
-            return mOrt - gOrt;
+            float tahminOrt = ortalama(tahminVeri);
+            float olcumOrt = ortalama(olcumVeri);
+            if ((int)tahminOrt != -99 && (int)olcumOrt != -99)
+                return olcumOrt - tahminOrt;
+            else
+                return -99;
+        }
+
+        private float rmb(float[] tahminVeri, float[] olcumVeri)
+        {
+            float olcumOrt = ortalama(olcumVeri);
+            float mb1 = mb(tahminVeri, olcumVeri);
+            if ((int)olcumOrt != -99 && (int)mb1 != -99)
+                return mb1 / olcumOrt;
+            else
+                return -99;
+        }
+
+        private float rms(float[] tahminVeri, float[] olcumVeri)
+        {
+            int bolum = 0;
+            float farkToplam = 0;
+            for (int v = 0; v < tahminVeri.Length; v++)
+            {
+                if ((int)tahminVeri[v] != -99 && (int)olcumVeri[v] != -99)
+                {
+                    farkToplam += (float)Math.Pow((tahminVeri[v] - olcumVeri[v]), 2);
+                    bolum++;
+                }
+            }
+            if (bolum != 0)
+                return farkToplam / bolum;
+            else
+                return -99;
+        }
+
+        private float rrms(float[] tahminVeri, float[] olcumVeri)
+        {
+            float rms1 = rms(tahminVeri, olcumVeri);
+            float olcumOrt = ortalama(olcumVeri);
+            if ((int)olcumOrt != -99 && (int)rms1 != -99)
+                return rms1 / olcumOrt;
+            else
+                return -99;
+        }
+
+        private float stdSapma(float[] tahminVeri, float[] olcumVeri)
+        {
+            float rms1 = rms(tahminVeri, olcumVeri);
+            float mb1 = mb(tahminVeri, olcumVeri);
+            if ((int)rms1 != -99 && (int)mb1 != -99)
+            {
+                rms1 = (float)Math.Pow(rms1, 2);
+                mb1 = (float)Math.Pow(mb1, 2);
+                return (float)Math.Sqrt(rms1 - mb1);
+            }
+            else
+                return -99;
+        }
+
+        private float cor(float[] tahminVeri, float[] olcumVeri)
+        {
+            float tahminOrt = ortalama(tahminVeri), olcumOrt = ortalama(olcumVeri);
+            float farkCarpim = 0, farkKareTahmin = 0, farkKareOlcum = 0, farkKareToplamTahmin = 0, farkKareToplamOlcum = 0, farkCarpimToplam = 0, payda = 0;
+            if ((int)tahminOrt != -99 && (int)olcumOrt != -99)
+            {
+                for (int v = 0; v < tahminVeri.Length; v++)
+                {
+                    if ((int)tahminVeri[v] != -99 && (int)olcumVeri[v] != -99)
+                    {
+                        farkCarpim = (tahminVeri[v] - tahminOrt) * (olcumVeri[v] - olcumOrt);
+                        farkKareTahmin = (float)Math.Pow(tahminVeri[v] - tahminOrt, 2);
+                        farkKareOlcum = (float)Math.Pow(olcumVeri[v] - olcumOrt, 2);
+                        farkKareToplamTahmin += farkKareTahmin;
+                        farkKareToplamOlcum += farkKareOlcum;
+                        farkCarpimToplam += farkCarpim;
+                    }
+                }
+                payda = (float)Math.Sqrt(farkKareToplamTahmin * farkKareToplamOlcum);
+            }
+            if (payda != 0)
+                return farkCarpimToplam / payda;
+            else
+                return -99;
         }
 
         private float[] veriAlWrf(string path, int minDate, int maxDate, string ist, int sira)
@@ -312,10 +400,10 @@ namespace env_istatistik
             for (int i = 0; i < dosyalar.Length; i++)
             {
                 dosyaAd = dosyalar[i];
-                dTarih = dosyaAd.Substring(dosyaAd.Length - 16, 8);
                 fi = new FileInfo(dosyaAd);
                 if (dosyaAd.Contains("radio_") && fi.Length > 0)
                 {
+                    dTarih = dosyaAd.Substring(dosyaAd.Length - 16, 8);
                     istasyonAyir(dosyaAd);
                     tmpDosyalar = Directory.GetFiles(Properties.Settings.Default.tmpPath);
                     for (int j = 0; j < tmpDosyalar.Length; j++)
@@ -377,6 +465,7 @@ namespace env_istatistik
 
         private void ristTam(string klasor)
         {
+            //dosyalarda eksik istasyon varsa tamamlar
             string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
             string[] dosyalar = Directory.GetFiles(klasor);
             string[] satirlar;
@@ -398,6 +487,259 @@ namespace env_istatistik
                         File.AppendAllText(dosyalar[i], istasyonlar[j] + ";0;-99;12;-99\n");
                 }
             }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string[] istasyonlar = { "17130", "17240", "17351", "17220", "17064", "17030", "17095", "17281" };
+            float[] envSicakliklar, radSicakliklar;
+            List<string> yazSatirlar = new List<string>();
+            float fltTemp = 0;
+            string strTemp = "";
+            yazSatirlar.Add("Istasyon;Yil;ay;MB;RMB;RMS;RRMS;STD;COR");
+            for (int i = 0; i < istasyonlar.Length; i++)
+            {
+                for (int yil = 2015; yil <= 2016; yil++)
+                {
+                    for (int ay = 1; ay <= 12; ay++)
+                    {
+                        envSicakliklar = envSOku(istasyonlar[i], yil, ay, 0);
+                        radSicakliklar = radSOku(istasyonlar[i], yil, ay, 0);
+                        fltTemp = mb(envSicakliklar, radSicakliklar);
+                        strTemp = istasyonlar[i] + ";" + yil.ToString() + ";" + ay.ToString() + ";" + formatla(fltTemp);
+                        fltTemp = rmb(envSicakliklar, radSicakliklar);
+                        strTemp += ";" + formatla(fltTemp);
+                        fltTemp = rms(envSicakliklar, radSicakliklar);
+                        strTemp += ";" + formatla(fltTemp);
+                        fltTemp = rrms(envSicakliklar, radSicakliklar);
+                        strTemp += ";" + formatla(fltTemp);
+                        fltTemp = stdSapma(envSicakliklar, radSicakliklar);
+                        strTemp += ";" + formatla(fltTemp);
+                        fltTemp = cor(envSicakliklar, radSicakliklar);
+                        strTemp += ";" + formatla(fltTemp);
+                        yazSatirlar.Add(strTemp);
+                    }
+                }
+            }
+            File.WriteAllLines("ecmrad.txt", yazSatirlar.ToArray());
+        }
+
+        private string formatla(float sayi)
+        {
+            string strDelim = "F3";
+            if ((int)sayi == -99)
+                return "-99";
+            else
+                return sayi.ToString(strDelim);
+        }
+
+        private string sifirEkle(int gSayi)
+        {
+            string sonuc = gSayi.ToString();
+            if (gSayi < 10)
+                sonuc = "0" + gSayi;
+            return sonuc;
+            
+        }
+
+        private int aySonGun(int yil, int ay)
+        {
+            int sonGun = 31;
+            if (ay == 2)
+                if (yil % 4 == 0)
+                    sonGun = 29;
+                else
+                    sonGun = 28;
+            else if (ay == 4 || ay == 6 || ay == 9 || ay == 11)
+                sonGun = 30;
+            return sonGun;
+        }
+
+        private float[] radSOku(string istasyon, int yil, int ay, int olcum)
+        {
+            List<float> radSicakliklar = new List<float>();
+            int sonGun = aySonGun(yil, ay);
+            string[] satirlar, sutunlar;
+            string gun = "01", teksatir = "", okunacakDosya = "";
+            bool istVar = false;
+            float n;
+            int sutunSira = 2, uzunluk = 3;
+            if (olcum == 12)
+            {
+                sutunSira = 4;
+                uzunluk = 5;
+            }
+            for (int i = 1; i <= sonGun; i++)
+            {
+                gun = sifirEkle(i);
+                okunacakDosya = Properties.Settings.Default.radSicaklikPath + yil + sifirEkle(ay) + gun + "_rsf.txt";
+                if (File.Exists(okunacakDosya))
+                {
+                    satirlar = File.ReadAllLines(okunacakDosya);
+                    for (int k = 0; k < satirlar.Length; k++)
+                    {
+                        teksatir = satirlar[k];
+                        if (teksatir.Contains(istasyon))
+                        {
+                            istVar = true;
+                            sutunlar = teksatir.Split(';');
+                            if (sutunlar.Length >= uzunluk)
+                            {
+                                if (float.TryParse(sutunlar[sutunSira], out n))
+                                    radSicakliklar.Add(float.Parse(sutunlar[sutunSira]));
+                                else
+                                    radSicakliklar.Add(-99);
+                            }
+                            else
+                            {
+                                radSicakliklar.Add(-99);
+                            }
+                        }
+                    }
+                    if (!istVar) radSicakliklar.Add(-99);
+                    istVar = false;
+                }
+                else
+                {
+                    radSicakliklar.Add(-99);
+                }
+            }
+            return radSicakliklar.ToArray();
+        }
+
+        private string istAdBul(string istNo)
+        {
+            string istAd = "";
+            switch (istNo)
+            {
+                case "17030":
+                    istAd = "SAMSUN";
+                    break;
+                case "17064":
+                    istAd = "ISTANBUL";
+                    break;
+                case "17095":
+                    istAd = "ERZURUM";
+                    break;
+                case "17130":
+                    istAd = "ANKARA";
+                    break;
+                case "17220":
+                    istAd = "IZMIR";
+                    break;
+                case "17240":
+                    istAd = "ISPARTA";
+                    break;
+                case "17281":
+                    istAd = "DIYARBAKIR";
+                    break;
+                case "17351":
+                    istAd = "ADANA";
+                    break;
+            }
+            return istAd;
+        }
+
+        private float[] envSOku(string istasyon, int yil, int ay, int olcum)
+        {
+            List<float> envSicakliklar = new List<float>();
+            int sonGun = aySonGun(yil, ay);
+            string[] satirlar, sutunlar;
+            string gun = "01", teksatir = "", okunacakDosya = "";
+            bool istVar = false;
+            float n;
+            string istAd = istAdBul(istasyon);
+            string olcumSaati = "12";
+            if (olcum == 12) olcumSaati = "24";
+            for (int i = 1; i <= sonGun; i++)
+            {
+                gun = sifirEkle(i);
+                okunacakDosya = Properties.Settings.Default.ecmDataPath + yil + sifirEkle(ay) + gun + "_fark_env_out.txt";
+                if (File.Exists(okunacakDosya))
+                {
+                    satirlar = File.ReadAllLines(okunacakDosya);
+                    for (int k = 0; k < satirlar.Length; k++)
+                    {
+                        teksatir = satirlar[k];
+                        if (teksatir.Contains(istAd + " " + olcumSaati))
+                        {
+                            istVar = true;
+                            sutunlar = teksatir.Split(new string[] { }, StringSplitOptions.RemoveEmptyEntries);
+                            if (sutunlar.Length >= 3)
+                            {
+                                if (float.TryParse(sutunlar[2], out n))
+                                    envSicakliklar.Add(float.Parse(sutunlar[2]));
+                                else
+                                    envSicakliklar.Add(-99);
+                            }
+                            else
+                            {
+                                envSicakliklar.Add(-99);
+                            }
+                            break;
+                        }
+                    }
+                    if (!istVar) envSicakliklar.Add(-99);
+                    istVar = false;
+                }
+                else
+                {
+                    envSicakliklar.Add(-99);
+                }
+            }
+            return envSicakliklar.ToArray();
+        }
+
+        private float[] wrfSOku(string istasyon, int yil, int ay, int olcum)
+        {
+            List<float> wrfSicakliklar = new List<float>();
+            int sonGun = aySonGun(yil, ay);
+            string[] satirlar, sutunlar;
+            string gun = "01", teksatir = "", okunacakDosya = "";
+            bool istVar = false;
+            float n;
+            int sutunSira = 11, uzunluk = 12;
+            if (olcum == 12)
+            {
+                sutunSira = 4;
+                uzunluk = 5;
+            }
+            for (int i = 1; i <= sonGun; i++)
+            {
+                gun = sifirEkle(i);
+                okunacakDosya = Properties.Settings.Default.wrfDataPath + yil + sifirEkle(ay) + gun + "fark.log";
+                if (File.Exists(okunacakDosya))
+                {
+                    satirlar = File.ReadAllLines(okunacakDosya);
+                    for (int k = 0; k < satirlar.Length; k++)
+                    {
+                        teksatir = satirlar[k];
+                        if (teksatir.Contains(istasyon))
+                        {
+                            istVar = true;
+                            sutunlar = teksatir.Split(new string[] { }, StringSplitOptions.RemoveEmptyEntries);
+                            if (sutunlar.Length >= uzunluk)
+                            {
+                                if (float.TryParse(sutunlar[sutunSira], out n))
+                                    wrfSicakliklar.Add(float.Parse(sutunlar[sutunSira]));
+                                else
+                                    wrfSicakliklar.Add(-99);
+                            }
+                            else
+                            {
+                                wrfSicakliklar.Add(-99);
+                            }
+                        }
+                    }
+                    if (!istVar) wrfSicakliklar.Add(-99);
+                    istVar = false;
+                }
+                else
+                {
+                    wrfSicakliklar.Add(-99);
+                }
+            }
+            return wrfSicakliklar.ToArray();
         }
     }
 }
